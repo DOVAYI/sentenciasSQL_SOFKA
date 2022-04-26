@@ -1,0 +1,89 @@
+# LAS SIGUIENTES SENTENCIAS SON VALIDAS PARA SCRIPT 1 Y 2, PERO DEFINIRA LA SENTENCIA A QUE SCRIPT PERTENECE,
+# SE REALIZO DE ESTA MANERA PARA REPETIR INSERCIONES Y ELIMINAR Y/O MODIFICAR 
+
+CREATE DATABASE tienda;
+
+CREATE TABLE `tienda`.`proveedores` ( `idp` VARCHAR(50) NOT NULL , `nombre` VARCHAR(100) NOT NULL , `direccion` VARCHAR(80) NOT NULL ,
+ `telefonos` VARCHAR(60) NOT NULL , PRIMARY KEY (`idp`)) ENGINE = InnoDB; 
+
+CREATE TABLE `tienda`.`productos` ( `idproduc` VARCHAR(50) NOT NULL , `nombre_prod` VARCHAR(100) NOT NULL ,
+ `precio` INT(10) NOT NULL , PRIMARY KEY (`idproduc`)) ENGINE = InnoDB; 
+
+CREATE TABLE `tienda`.`productosproveedores` ( `idproduc` VARCHAR(50) NOT NULL , `idp` VARCHAR(50) NOT NULL ) ENGINE = InnoDB; 
+
+CREATE TABLE `tienda`.`clientes` ( `idc` VARCHAR(50) NOT NULL , `tipoidc` VARCHAR(20) NOT NULL , PRIMARY KEY (`idc`)) ENGINE = InnoDB; 
+
+CREATE TABLE `tienda`.`ventas` ( `idv` VARCHAR(50) NOT NULL , `idc` VARCHAR(50) NOT NULL  , 
+`total` INT(10) NOT NULL ,`estado` INT(2), PRIMARY KEY (`idv`)) ENGINE = InnoDB; 
+
+CREATE TABLE `tienda`.`ventasproductos` ( `idv` VARCHAR(50) NOT NULL , `idprod` VARCHAR(50) NOT NULL ) ENGINE = InnoDB; 
+
+ALTER TABLE `tienda`.`productosproveedores` ADD FOREIGN KEY (`idp`) REFERENCES `proveedores`(`idp`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE `tienda`.`productosproveedores` ADD FOREIGN KEY (`idproduc`) REFERENCES `productos`(`idproduc`) ON DELETE CASCADE ON UPDATE CASCADE; 
+
+ALTER TABLE `tienda`.`ventas` ADD FOREIGN KEY (`idc`) REFERENCES `clientes`(`idc`) ON DELETE CASCADE ON UPDATE CASCADE; 
+
+ALTER TABLE `tienda`.`ventasproductos` ADD FOREIGN KEY (`idprod`) REFERENCES `productos`(`idproduc`) ON DELETE CASCADE ON UPDATE CASCADE; 
+
+ALTER TABLE `tienda`.`ventasproductos` ADD FOREIGN KEY (`idv`) REFERENCES `ventas`(`idv`) ON DELETE CASCADE ON UPDATE CASCADE; 
+
+INSERT INTO `tienda`.`productos` (`idproduc`, `nombre_prod`, `precio`) VALUES ('p1', 'arroz', '2000'), ('p2', 'azucar', '1800'), 
+('p3', 'leche', '2500'), ('p4', 'aceite', '18000'), ('p5', 'huevos', '16000'), ('p6', 'queso', '9000'), ('p7', 'papa', '2700');
+
+INSERT INTO `tienda`.`proveedores` (`idp`, `nombre`, `direccion`, `telefonos`) VALUES ('prov85', 'productos del caribe', 'calle 22 N° 720 el colitoral', '312 6589078'), 
+('prov90', 'alimentos el agricultor', 'carrera 5 N° 10-89 el paraiso', '035 2723456');
+
+INSERT INTO `tienda`.`clientes` (`idc`, `tipoidc`) VALUES ('1102803054', 'c.c'), ('1102803055', 'c.c'), ('1102803056', 'c.c'), ('1102803057', 'c.c'), ('1102803058', 'c.c');
+
+INSERT INTO `tienda`.`productosproveedores` (`idproduc`, `idp`) VALUES ('p1', 'prov85'), ('p2', 'prov85'), ('p3', 'prov85'), ('p4', 'prov85');
+
+INSERT INTO `tienda`.`ventas` (`idv`, `idc`, `total`,`estado`) VALUES ('v1', '1102803054', '11800',1), ('v2', '1102803055', '16000',1), ('v3', '1102803056', '13000',1),
+('v4', '1102803057', '18000',1),('v5', '1102803058', '21000',1);
+
+INSERT INTO `tienda`.`ventasproductos` (`idv`, `idprod`) VALUES ('v1', 'p1'), ('v1', 'p1'), ('v1', 'p1'), ('v1', 'p1'), ('v1', 'p1'), ('v1', 'p2'),('v2', 'p5'),
+('v3', 'p6'),('v3', 'p1'),('v3', 'p1'),('v4', 'p4'),('v5', 'p3'),('v5', 'p3'),('v5', 'p5');
+
+# ESTA SENTENCIAS HACEN PARTE DEL SCRIPT 2
+
+
+# 1)obtener los productos vendidos digitando tipo y numero de documento 
+
+SELECT ventas.idc,productos.nombre_prod FROM ventas INNER JOIN ventasproductos ON ventas.idv = ventasproductos.idv 
+INNER JOIN productos ON ventasproductos.idprod = productos.idproduc INNER JOIN clientes ON ventas.idc=clientes.idc 
+WHERE (ventas.idc='1102803054' and clientes.tipoidc='c.c'); 
+
+# 2)consultar productos por nombre y mostrar proveedor
+
+SELECT productos.nombre_prod,proveedores.nombre FROM productos INNER JOIN 
+productosproveedores ON productos.idproduc = productosproveedores.idproduc 
+INNER JOIN proveedores ON productosproveedores.idp = proveedores.idp WHERE productos.nombre_prod='arroz'; 
+
+# 3) cantidad de producto mas vendido y ordenada de mayor a menor
+
+SELECT productos.nombre_prod,COUNT(ventasproductos.idprod) FROM ventas INNER JOIN ventasproductos ON (ventas.idv = ventasproductos.idv) 
+INNER JOIN productos ON (ventasproductos.idprod = productos.idproduc) GROUP BY productos.nombre_prod HAVING COUNT(ventasproductos.idprod) > 0 
+ORDER BY COUNT(ventasproductos.idprod) DESC; 
+
+# ESTA SENTENCIAS HACEN PARTE DEL SCRIPT 1
+
+
+UPDATE `tienda`.`productos` SET `nombre_prod` = 'Arroz' WHERE `productos`.`idproduc` = 'p1';
+
+UPDATE `tienda`.`productos` SET `nombre_prod` = 'Azucar' WHERE `productos`.`idproduc` = 'p2';
+
+UPDATE `tienda`.`productos` SET `nombre_prod` = 'Leche' WHERE `productos`.`idproduc` = 'p3'; 
+
+UPDATE `tienda`.`proveedores` SET `idp` = 'Prov85' WHERE `proveedores`.`idp` = 'prov85';
+
+UPDATE `tienda`.`proveedores` SET `idp` = 'Prov90' WHERE `proveedores`.`idp` = 'prov90';
+
+DELETE FROM `tienda`.`ventas` WHERE `ventas`.`idv` = 'v1';
+
+DELETE FROM `tienda`.`ventas` WHERE `ventas`.`idv` = 'v2';
+
+UPDATE `tienda`.`ventas` SET `estado` = '0' WHERE `ventas`.`idv` = 'v3';
+
+UPDATE `tienda`.`ventas` SET `estado` = '0' WHERE `ventas`.`idv` = 'v4';
+
+SELECT * FROM `tienda`.`ventas` WHERE estado=1;
